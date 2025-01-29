@@ -10,3 +10,5 @@ These are both found in the Scripts folder.
 Other folders created today include Data (which contains the ECE directory), Results, Reports, Figures and Docs.
 
 report.html has also been created. It serves the purpose of quick and general EDA.
+
+Confirm that this has been uploaded to Github.
