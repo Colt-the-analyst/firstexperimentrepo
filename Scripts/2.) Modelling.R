@@ -31,11 +31,11 @@ tidymodels_prefer()
 ################################################################################
 
 # Convert `equity_index_eqi` to a factor in the training set
-directory_train <- directory_train %>%
+directory_train <- directory_train |>
   mutate(equity_index_eqi = factor(equity_index_eqi))
 
 # Ensure test data uses the same factor levels as the training set
-directory_test <- directory_test %>%
+directory_test <- directory_test |>
   mutate(equity_index_eqi = factor(equity_index_eqi, levels = levels(directory_train$equity_index_eqi)))
 
 # Why?
@@ -148,7 +148,7 @@ predict_class_knn <- function(model, newdata) {
 
 # Compute permutation-based feature importance using a sample for efficiency
 set.seed(123)
-subset_train <- directory_train %>% sample_n(300)  # Speed up computation
+subset_train <- directory_train |> sample_n(300)  # Speed up computation
 
 vi_knn <- vi_permute(
   final_knn_fit,
