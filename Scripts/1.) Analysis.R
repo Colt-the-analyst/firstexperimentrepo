@@ -1,5 +1,5 @@
 ################################################################################
-# Wrangling
+# Analysis
 # 
 # The purpose of this file is to perform exploratory data analysis (EDA) on the
 # early childhood education (ECE) data.
@@ -84,7 +84,8 @@ directory_data <- directory_data |>
     asian,
     other
   )
-)
+) |>
+  filter(!is.na(total))
 
 # Step 5
 # Check for Missing Values
