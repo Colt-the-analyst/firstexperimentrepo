@@ -210,7 +210,7 @@ final_knn_wflow <-
 final_knn_fit <- fit(final_knn_wflow, data = directory_train)
 
 ################################################################################
-# Step 12: Analyze Feature Importance Using `vip::vi_permute()`
+# Step 10: Analyze Feature Importance Using `vip::vi_permute()`
 ################################################################################
 
 # Define a prediction function to extract class predictions
@@ -235,7 +235,7 @@ vi_knn <- vi_permute(
 vip(vi_knn)
 
 ################################################################################
-# Step 13: Make Predictions on the Test Set
+# Step 11: Make Predictions on the Test Set
 ################################################################################
 
 # Generate predictions and bind the actual EQI values
@@ -243,7 +243,7 @@ knn_test_res <- predict(final_knn_fit, new_data = directory_test |> select(-equi
   bind_cols(directory_test |> select(equity_index_eqi))
 
 ################################################################################
-# Step 14: Evaluate Final Model Performance
+# Step 12: Evaluate Final Model Performance
 ################################################################################
 
 # Compute accuracy of the final model on the test set
@@ -253,7 +253,7 @@ accuracy(knn_test_res, truth = equity_index_eqi, estimate = .pred_class)
 conf_mat(knn_test_res, truth = equity_index_eqi, estimate = .pred_class)
 
 ################################################################################
-# Step 15: Compute Additional Performance Metrics
+# Step 13: Compute Additional Performance Metrics
 ################################################################################
 
 # Define a metric set to evaluate classification performance
