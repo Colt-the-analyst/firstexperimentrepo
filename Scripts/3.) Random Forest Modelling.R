@@ -13,7 +13,7 @@
 #   Colton Brewer
 #
 # Date:
-#   02/02/2025
+#   03/02/2025
 ################################################################################
 
 # Load required libraries
@@ -40,7 +40,9 @@ directory_data <- read.csv(data_path, skip = 16) |>
 
 # Ensure `equity_index_eqi` has no missing values
 directory_data <- directory_data |> 
-  filter(!is.na(equity_index_eqi)) |>
+  filter(
+    equity_index_eqi %in% c("EQI 1", "EQI 2", "EQI 3", "EQI 4", "EQI > 5")
+    ) |>
   mutate(
     age_0_prop = age_0 / total,
     age_1_prop = age_1 / total,
