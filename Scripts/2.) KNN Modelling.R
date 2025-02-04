@@ -1,19 +1,19 @@
 ################################################################################
 # Modelling - Predicting EQI (Equity Index)
-# 
-# The purpose of this script is to create a model that predicts a service's 
-# Equity Index (EQI) score based on other information available in the 
+#
+# The purpose of this script is to create a model that predicts a service's
+# Equity Index (EQI) score based on other information available in the
 # Early Childhood Education (ECE) directory.
-# 
-# The model uses the k-Nearest Neighbors (KNN) algorithm and applies 
-# hyperparameter tuning to optimize performance. It also includes feature 
+#
+# The model uses the k-Nearest Neighbors (KNN) algorithm and applies
+# hyperparameter tuning to optimize performance. It also includes feature
 # importance analysis using permutation-based techniques.
-# 
+#
 # Created by:
 #   Colton Brewer
-# 
+#
 # Date:
-#   01/02/2025
+#   03/02/2025
 ################################################################################
 
 # Load required libraries
@@ -35,30 +35,29 @@ tidymodels_prefer()
 data_path <- file.path("Data", "directory.csv")
 
 # Read the CSV file and clean column names
-directory_data <- read.csv(data_path, skip = 16) |> 
+directory_data <- read.csv(data_path, skip = 16) |>
   select(-starts_with("X")) |>  # Remove unnecessary columns
   clean_names()
 
 # Ensure `equity_index_eqi` has no missing values
-directory_data <- directory_data |> filter(!is.na(equity_index_eqi)) |>
+directory_data <- directory_data |> filter(equity_index_eqi %in% c("EQI 1", "EQI 2", "EQI 3", "EQI 4", "EQI > 5")) |>
   mutate(
-    age_0_prop = age_0/total,
-    age_1_prop = age_1/total,
-    age_2_prop = age_2/total,
-    age_3_prop = age_3/total,
-    age_4_prop = age_4/total,
-    age_5_prop = age_5/total,
-    european_pakeha_prop = european_pakeha/total,
-    maori_prop = maori/total,
-    pacific_prop = pacific/total,
-    asian_pakeha_prop = asian/total,
-    other_race_prop = other/total,
+    age_0_prop = age_0 / total,
+    age_1_prop = age_1 / total,
+    age_2_prop = age_2 / total,
+    age_3_prop = age_3 / total,
+    age_4_prop = age_4 / total,
+    age_5_prop = age_5 / total,
+    european_pakeha_prop = european_pakeha / total,
+    maori_prop = maori / total,
+    pacific_prop = pacific / total,
+    asian_pakeha_prop = asian / total,
+    other_race_prop = other / total,
     equity_index_eqi = as.factor(equity_index_eqi),
-    community_of_learning_id = as.factor(
-      case_when(
-        !is.na(community_of_learning_id) ~ as.character(community_of_learning_id),
-        is.na(community_of_learning_id) ~ "None"
-      ))
+    community_of_learning_id = as.factor(case_when(
+      !is.na(community_of_learning_id) ~ as.character(community_of_learning_id),
+      is.na(community_of_learning_id) ~ "None"
+    ))
   ) |>
   select(
     -c(
@@ -116,8 +115,8 @@ knn_recipe <- recipe(equity_index_eqi ~ ., data = directory_train) |>
   step_other(all_nominal_predictors(), threshold = 0.01) |>  # Group rare levels
   step_dummy(all_nominal_predictors()) |>  # Convert categorical variables to dummy variables
   step_zv(all_numeric_predictors()) |>  # Remove zero-variance predictors
-  step_normalize(all_numeric_predictors())  # Normalize numerical predictors 
-  
+  step_normalize(all_numeric_predictors())  # Normalize numerical predictors
+
 knn_recipe
 
 # Prepare the recipe
@@ -132,7 +131,10 @@ knn_prep
 set.seed(111111)  # Ensure reproducibility
 
 # Create a 5-fold cross-validation object for efficiency
-directory_folds <- vfold_cv(directory_train, v = 5, strata = equity_index_eqi, repeats = 10)
+directory_folds <- vfold_cv(directory_train,
+                            v = 5,
+                            strata = equity_index_eqi,
+                            repeats = 10)
 
 directory_folds
 
@@ -142,7 +144,7 @@ directory_folds
 
 # Define a k-Nearest Neighbors model with a tunable `neighbors` parameter
 knn_model <-
-  nearest_neighbor(neighbors = tune(), weight_func = "rectangular") |>  
+  nearest_neighbor(neighbors = tune(), weight_func = "rectangular") |>
   set_engine("kknn") |>
   set_mode("classification")
 
@@ -153,7 +155,7 @@ knn_model
 ################################################################################
 
 # Create a workflow that bundles the model with preprocessing
-knn_wflow_tune <- 
+knn_wflow_tune <-
   workflow() |>
   add_model(knn_model) |>
   add_recipe(knn_recipe)
@@ -202,7 +204,7 @@ autoplot(knn_results)
 best_k <- knn_results |> select_best(metric = "accuracy")
 final_knn_model <- finalize_model(knn_model, best_k)
 
-final_knn_wflow <- 
+final_knn_wflow <-
   workflow() |>
   add_model(final_knn_model) |>
   add_recipe(knn_recipe)
@@ -215,7 +217,7 @@ final_knn_fit <- fit(final_knn_wflow, data = directory_train)
 
 # Define a prediction function to extract class predictions
 predict_class_knn <- function(model, newdata) {
-  predict(model, newdata)$.pred_class  
+  predict(model, newdata)$.pred_class
 }
 
 # Compute permutation-based feature importance using a smaller sample for efficiency
@@ -257,17 +259,18 @@ conf_mat(knn_test_res, truth = equity_index_eqi, estimate = .pred_class)
 ################################################################################
 
 # Define a metric set to evaluate classification performance
-metrics <- metric_set(
-  accuracy,  # Overall correctness
-  precision, # How many predicted positives were correct?
-  recall,    # How many actual positives were predicted correctly?
-  f_meas     # Harmonic mean of precision and recall
-)
-
-# Compute the metrics, ignoring missing classes (to prevent warnings)
-metrics(knn_test_res, truth = equity_index_eqi, estimate = .pred_class, na_rm = TRUE)
-
-
-################################################################################
-# End of Script
-################################################################################
+metrics <- metric_set(accuracy, # Overall correctness
+                      precision, # How many predicted positives were correct?
+                      recall, # How many actual positives were predicted correctly?
+                      f_meas     # Harmonic mean of precision and recall)
+                      
+                      # Compute the metrics, ignoring missing classes (to prevent warnings)
+                      metrics(knn_test_res,
+                              truth = equity_index_eqi,
+                              estimate = .pred_class,
+                              na_rm = TRUE)
+                      
+                      
+                      ################################################################################
+                      # End of Script
+                      ################################################################################
