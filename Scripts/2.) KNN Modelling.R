@@ -40,7 +40,9 @@ directory_data <- read.csv(data_path, skip = 16) |>
   clean_names()
 
 # Ensure `equity_index_eqi` has no missing values
-directory_data <- directory_data |> filter(equity_index_eqi %in% c("EQI 1", "EQI 2", "EQI 3", "EQI 4", "EQI > 5")) |>
+directory_data <- directory_data |> filter(
+  equity_index_eqi %in% c("EQI 1", "EQI 2", "EQI 3", "EQI 4", "EQI > 5"),!is.na(equity_index_eqi)
+) |>
   mutate(
     age_0_prop = age_0 / total,
     age_1_prop = age_1 / total,
@@ -110,7 +112,7 @@ dim(directory_test)
 
 # Define a preprocessing recipe
 knn_recipe <- recipe(equity_index_eqi ~ ., data = directory_train) |>
-  step_indicate_na(longitude, latitude)  |>
+  step_impute_knn(longitude, latitude)  |>
   step_novel(all_nominal_predictors()) |>  # Handle unseen factor levels
   step_other(all_nominal_predictors(), threshold = 0.01) |>  # Group rare levels
   step_dummy(all_nominal_predictors()) |>  # Convert categorical variables to dummy variables
@@ -262,15 +264,15 @@ conf_mat(knn_test_res, truth = equity_index_eqi, estimate = .pred_class)
 metrics <- metric_set(accuracy, # Overall correctness
                       precision, # How many predicted positives were correct?
                       recall, # How many actual positives were predicted correctly?
-                      f_meas     # Harmonic mean of precision and recall)
-                      
-                      # Compute the metrics, ignoring missing classes (to prevent warnings)
-                      metrics(knn_test_res,
-                              truth = equity_index_eqi,
-                              estimate = .pred_class,
-                              na_rm = TRUE)
-                      
-                      
-                      ################################################################################
-                      # End of Script
-                      ################################################################################
+                      f_meas     # Harmonic mean of precision and recall
+                      )
+# Compute the metrics, ignoring missing classes (to prevent warnings)
+metrics(knn_test_res,
+        truth = equity_index_eqi,
+        estimate = .pred_class,
+        na_rm = TRUE)
+
+
+################################################################################
+# End of Script
+################################################################################
